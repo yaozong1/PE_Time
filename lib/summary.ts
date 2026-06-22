@@ -1,4 +1,4 @@
-import type { MonthSummary, SummaryBucket, WorkEntry } from "@/lib/types";
+﻿import type { MonthSummary, SummaryBucket, WorkEntry } from "@/lib/types";
 
 function monthOf(date: string) {
   return date.slice(0, 7);

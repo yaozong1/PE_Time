@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 import { addEntry, isStorageConfigured, listEntries } from "@/lib/upstash";
 import type { EntryInput, WorkEntry } from "@/lib/types";
 
@@ -43,9 +44,23 @@ function validate(payload: Partial<EntryInput>) {
   };
 }
 
+async function requireUser() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "请先登录。" }, { status: 401 });
+  }
+
+  return null;
+}
+
 export async function GET() {
   if (!isStorageConfigured()) {
     return NextResponse.json({ entries: [], configured: false });
+  }
+
+  const unauthorized = await requireUser();
+  if (unauthorized) {
+    return unauthorized;
   }
 
   try {
@@ -67,6 +82,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const unauthorized = await requireUser();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   const payload = (await request.json()) as Partial<EntryInput>;
   const result = validate(payload);
 
@@ -84,9 +104,6 @@ export async function POST(request: Request) {
     await addEntry(entry);
     return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "保存记录失败。" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error instanceof Error ? error.message : "保存记录失败。" }, { status: 500 });
   }
 }

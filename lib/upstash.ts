@@ -1,4 +1,4 @@
-import type { WorkEntry } from "@/lib/types";
+﻿import type { WorkEntry } from "@/lib/types";
 
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -15,7 +15,7 @@ function assertConfigured() {
   }
 }
 
-async function upstash<T>(command: unknown[]): Promise<T> {
+export async function upstash<T>(command: unknown[]): Promise<T> {
   assertConfigured();
 
   const response = await fetch(`${redisUrl}/pipeline`, {
