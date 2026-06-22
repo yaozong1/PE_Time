@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { addEntry, isStorageConfigured, listEntries } from "@/lib/upstash";
+import { addEntry, deleteEntry, isStorageConfigured, listEntries, updateEntry } from "@/lib/upstash";
 import type { EntryInput, WorkEntry } from "@/lib/types";
 
 const people = ["Leila", "yaozong"];
@@ -105,5 +105,65 @@ export async function POST(request: Request) {
     return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "保存记录失败。" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  if (!isStorageConfigured()) {
+    return NextResponse.json({ error: "还没有配置 Upstash。" }, { status: 500 });
+  }
+
+  const unauthorized = await requireUser();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
+  const payload = (await request.json()) as Partial<WorkEntry>;
+  const id = cleanText(payload.id);
+  const createdAt = cleanText(payload.createdAt);
+  const result = validate(payload);
+
+  if (!id || !createdAt) {
+    return NextResponse.json({ error: "缺少记录 ID。" }, { status: 400 });
+  }
+
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+
+  const entry: WorkEntry = {
+    ...result.value,
+    id,
+    createdAt
+  };
+
+  try {
+    await updateEntry(entry);
+    return NextResponse.json({ entry });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "更新记录失败。" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  if (!isStorageConfigured()) {
+    return NextResponse.json({ error: "还没有配置 Upstash。" }, { status: 500 });
+  }
+
+  const unauthorized = await requireUser();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
+  const id = new URL(request.url).searchParams.get("id")?.trim() ?? "";
+  if (!id) {
+    return NextResponse.json({ error: "缺少记录 ID。" }, { status: 400 });
+  }
+
+  try {
+    await deleteEntry(id);
+    return NextResponse.json({ ok: true, id });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "删除记录失败。" }, { status: 500 });
   }
 }

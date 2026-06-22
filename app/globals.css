@@ -441,3 +441,39 @@ h1 {
 .tabbar.admin-tabs {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+
+.inline-edit-form {
+  display: grid;
+  gap: 12px;
+}
+
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.compact-btn {
+  min-height: 38px;
+  padding: 0 14px;
+}
+
+.danger-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(184, 69, 69, 0.28);
+  border-radius: 8px;
+  background: #fff7f7;
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.danger-btn:hover {
+  border-color: var(--danger);
+}
+
+.danger-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}

@@ -83,6 +83,10 @@ export default function Home() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<WorkEntry | null>(null);
+  const [isUpdatingEntry, setIsUpdatingEntry] = useState(false);
+  const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
 
   async function loadEntries() {
     try {
@@ -287,6 +291,83 @@ export default function Home() {
       setIsSaving(false);
     }
   }
+
+  function startEditEntry(entry: WorkEntry) {
+    setEditingEntryId(entry.id);
+    setEditForm({ ...entry });
+  }
+
+  function cancelEditEntry() {
+    setEditingEntryId(null);
+    setEditForm(null);
+  }
+
+  async function submitEditEntry(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editForm) {
+      return;
+    }
+
+    setIsUpdatingEntry(true);
+    setStatus("正在更新记录...");
+    setStatusKind("idle");
+
+    try {
+      const response = await fetch("/api/entries", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm)
+      });
+      const data = (await response.json()) as { entry?: WorkEntry; error?: string };
+
+      if (!response.ok || !data.entry) {
+        throw new Error(data.error ?? "更新记录失败");
+      }
+
+      setEntries((current) => current.map((entry) => (entry.id === data.entry?.id ? (data.entry as WorkEntry) : entry)));
+      cancelEditEntry();
+      setStatus("记录已更新");
+      setStatusKind("ready");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "更新记录失败");
+      setStatusKind("error");
+    } finally {
+      setIsUpdatingEntry(false);
+    }
+  }
+
+  async function deleteWorkEntry(entry: WorkEntry) {
+    const ok = window.confirm(`确定删除 ${entry.date} ${entry.project} 的 ${entry.hours}h 记录吗？`);
+    if (!ok) {
+      return;
+    }
+
+    setDeletingEntryId(entry.id);
+    setStatus("正在删除记录...");
+    setStatusKind("idle");
+
+    try {
+      const response = await fetch(`/api/entries?id=${encodeURIComponent(entry.id)}`, { method: "DELETE" });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "删除记录失败");
+      }
+
+      setEntries((current) => current.filter((item) => item.id !== entry.id));
+      if (editingEntryId === entry.id) {
+        cancelEditEntry();
+      }
+      setStatus("记录已删除");
+      setStatusKind("ready");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "删除记录失败");
+      setStatusKind("error");
+    } finally {
+      setDeletingEntryId(null);
+    }
+  }
+
 
   return (
     <main className="page">
@@ -506,19 +587,110 @@ export default function Home() {
                     <p className="empty">当前筛选条件下还没有记录。</p>
                   ) : (
                     <div className="entries">
-                      {visibleEntries.map((entry) => (
-                        <article className="entry-card" key={entry.id}>
-                          <div className="entry-title">
-                            <span>{entry.project}</span>
-                            <span>{entry.hours}h</span>
-                          </div>
-                          <div className="entry-meta">
-                            <span className="tag">{entry.date}</span>
-                            <span className="tag">{entry.person}</span>
-                          </div>
-                          {entry.notes ? <p className="entry-note">{entry.notes}</p> : null}
-                        </article>
-                      ))}
+                      {visibleEntries.map((entry) => {
+                        const isEditing = editingEntryId === entry.id && editForm;
+
+                        return (
+                          <article className="entry-card" key={entry.id}>
+                            {isEditing ? (
+                              <form className="inline-edit-form" onSubmit={submitEditEntry}>
+                                <div className="two-col">
+                                  <label className="field">
+                                    <span>日期</span>
+                                    <input
+                                      required
+                                      type="date"
+                                      value={editForm.date}
+                                      onChange={(event) => setEditForm({ ...editForm, date: event.target.value })}
+                                    />
+                                  </label>
+                                  <label className="field">
+                                    <span>工时</span>
+                                    <input
+                                      required
+                                      min="0.25"
+                                      max="24"
+                                      step="0.25"
+                                      type="number"
+                                      value={editForm.hours}
+                                      onChange={(event) => setEditForm({ ...editForm, hours: Number(event.target.value) })}
+                                    />
+                                  </label>
+                                </div>
+                                <label className="field">
+                                  <span>人员</span>
+                                  <select
+                                    required
+                                    value={editForm.person}
+                                    onChange={(event) => setEditForm({ ...editForm, person: event.target.value })}
+                                  >
+                                    {peopleOptions.map((person) => (
+                                      <option key={person} value={person}>
+                                        {person}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label className="field">
+                                  <span>项目</span>
+                                  <select
+                                    required
+                                    value={editForm.project}
+                                    onChange={(event) => setEditForm({ ...editForm, project: event.target.value })}
+                                  >
+                                    {projectOptions.map((project) => (
+                                      <option key={project} value={project}>
+                                        {project}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label className="field">
+                                  <span>工作备注</span>
+                                  <textarea
+                                    rows={3}
+                                    value={editForm.notes}
+                                    onChange={(event) => setEditForm({ ...editForm, notes: event.target.value })}
+                                  />
+                                </label>
+                                <div className="entry-actions">
+                                  <button className="primary-btn compact-btn" disabled={isUpdatingEntry} type="submit">
+                                    {isUpdatingEntry ? "保存中" : "保存"}
+                                  </button>
+                                  <button className="secondary-btn compact-btn" type="button" onClick={cancelEditEntry}>
+                                    取消
+                                  </button>
+                                </div>
+                              </form>
+                            ) : (
+                              <>
+                                <div className="entry-title">
+                                  <span>{entry.project}</span>
+                                  <span>{entry.hours}h</span>
+                                </div>
+                                <div className="entry-meta">
+                                  <span className="tag">{entry.date}</span>
+                                  <span className="tag">{entry.person}</span>
+                                </div>
+                                {entry.notes ? <p className="entry-note">{entry.notes}</p> : null}
+                                <div className="entry-actions">
+                                  <button className="secondary-btn compact-btn" type="button" onClick={() => startEditEntry(entry)}>
+                                    编辑
+                                  </button>
+                                  <button
+                                    className="danger-btn compact-btn"
+                                    disabled={deletingEntryId === entry.id}
+                                    type="button"
+                                    onClick={() => deleteWorkEntry(entry)}
+                                  >
+                                    {deletingEntryId === entry.id ? "删除中" : "删除"}
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </article>
+                        );
+                      })}
                     </div>
                   )}
                 </section>
