@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { addEntry, isStorageConfigured, listEntries } from "@/lib/upstash";
-import type { EntryInput, WorkCategory, WorkEntry } from "@/lib/types";
+import type { EntryInput, WorkEntry } from "@/lib/types";
 
-const categories: WorkCategory[] = ["客户沟通", "市场调研", "方案撰写", "数据分析", "项目管理", "其他"];
+const people = ["Leila", "yaozong"];
+const projects = ["PE internal", "Burn", "Roam", "Epsilon", "CleanMotion"];
 
 function cleanText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -12,17 +13,19 @@ function validate(payload: Partial<EntryInput>) {
   const date = cleanText(payload.date);
   const person = cleanText(payload.person);
   const project = cleanText(payload.project);
-  const market = cleanText(payload.market);
-  const category = cleanText(payload.category) as WorkCategory;
   const notes = cleanText(payload.notes);
   const hours = Number(payload.hours);
 
-  if (!date || !person || !project || !market || !category) {
-    return { error: "请填写日期、人员、项目、市场和分类。" };
+  if (!date || !person || !project) {
+    return { error: "请填写日期、人员和项目。" };
   }
 
-  if (!categories.includes(category)) {
-    return { error: "请选择有效分类。" };
+  if (!people.includes(person)) {
+    return { error: "请选择有效人员。" };
+  }
+
+  if (!projects.includes(project)) {
+    return { error: "请选择有效项目。" };
   }
 
   if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
@@ -34,8 +37,6 @@ function validate(payload: Partial<EntryInput>) {
       date,
       person,
       project,
-      market,
-      category,
       hours: Math.round(hours * 100) / 100,
       notes
     }

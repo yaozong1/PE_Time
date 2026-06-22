@@ -107,11 +107,42 @@ h1 {
   color: var(--danger);
 }
 
-.workspace {
+.tabbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 16px;
-  align-items: start;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.tab-button {
+  min-height: 44px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.tab-button[aria-selected="true"] {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.tab-button:focus-visible {
+  outline: 3px solid rgba(15, 123, 108, 0.24);
+  outline-offset: 2px;
+}
+
+.workspace {
+  display: block;
 }
 
 .panel {
@@ -119,6 +150,10 @@ h1 {
   border: 1px solid var(--line);
   border-radius: 8px;
   box-shadow: var(--shadow);
+}
+
+.tab-panel {
+  width: 100%;
 }
 
 .panel-header {
@@ -341,10 +376,6 @@ h1 {
 
   .topbar {
     display: grid;
-  }
-
-  .workspace {
-    grid-template-columns: 1fr;
   }
 
   .filters,

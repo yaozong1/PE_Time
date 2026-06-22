@@ -8,7 +8,7 @@ function roundHours(value: number) {
   return Math.round(value * 100) / 100;
 }
 
-function bucketBy(entries: WorkEntry[], field: keyof Pick<WorkEntry, "person" | "project" | "market" | "category">) {
+function bucketBy(entries: WorkEntry[], field: keyof Pick<WorkEntry, "person" | "project">) {
   const map = new Map<string, SummaryBucket>();
 
   for (const entry of entries) {
@@ -31,8 +31,6 @@ export function summarize(entries: WorkEntry[]): MonthSummary {
     totalHours: roundHours(entries.reduce((sum, entry) => sum + entry.hours, 0)),
     entryCount: entries.length,
     people: bucketBy(entries, "person"),
-    projects: bucketBy(entries, "project"),
-    markets: bucketBy(entries, "market"),
-    categories: bucketBy(entries, "category")
+    projects: bucketBy(entries, "project")
   };
 }
