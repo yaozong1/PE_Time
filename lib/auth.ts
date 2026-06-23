@@ -1,4 +1,4 @@
-﻿import { cookies } from "next/headers";
+import { cookies } from "next/headers";
 import { pbkdf2Sync, randomBytes, timingSafeEqual } from "node:crypto";
 import { upstash } from "@/lib/upstash";
 
@@ -6,6 +6,7 @@ const usersKey = process.env.UPSTASH_USERS_KEY ?? "consulting:users";
 const sessionPrefix = process.env.UPSTASH_SESSION_PREFIX ?? "consulting:sessions";
 const sessionCookie = "pe_time_session";
 const sessionMaxAge = 60 * 60 * 24 * 30;
+const useSecureCookies = process.env.AUTH_COOKIE_SECURE === "true";
 const adminUsernames = (process.env.ADMIN_USERNAMES ?? "")
   .split(",")
   .map((name) => name.trim().toLowerCase())
@@ -161,7 +162,7 @@ export async function createSession(user: CurrentUser) {
     maxAge: sessionMaxAge,
     path: "/",
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production"
+    secure: useSecureCookies
   });
 }
 

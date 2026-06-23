@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -90,7 +90,7 @@ export default function Home() {
 
   async function loadEntries() {
     try {
-      const response = await fetch("/api/entries", { cache: "no-store" });
+      const response = await fetch("/api/entries", { cache: "no-store", credentials: "include" });
       const data = (await response.json()) as { entries: WorkEntry[]; configured?: boolean; error?: string };
 
       if (!response.ok) {
@@ -113,7 +113,7 @@ export default function Home() {
 
   async function loadCurrentUser() {
     try {
-      const response = await fetch("/api/auth/me", { cache: "no-store" });
+      const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
       const data = (await response.json()) as {
         user: CurrentUser | null;
         configured?: boolean;
@@ -168,6 +168,7 @@ export default function Home() {
       const response = await fetch(canBootstrapAdmin ? "/api/auth/register" : "/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(authForm)
       });
       const data = (await response.json()) as AuthResponse;
@@ -201,6 +202,7 @@ export default function Home() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(newUserForm)
       });
       const data = (await response.json()) as AuthResponse;
@@ -230,6 +232,7 @@ export default function Home() {
       const response = await fetch("/api/auth/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(settingsForm)
       });
       const data = (await response.json()) as AuthResponse;
@@ -251,7 +254,7 @@ export default function Home() {
   }
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     setUser(null);
     setEntries([]);
     setActiveTab("entry");
@@ -270,6 +273,7 @@ export default function Home() {
       const response = await fetch("/api/entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(form)
       });
       const data = (await response.json()) as { entry?: WorkEntry; error?: string };
@@ -316,6 +320,7 @@ export default function Home() {
       const response = await fetch("/api/entries", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(editForm)
       });
       const data = (await response.json()) as { entry?: WorkEntry; error?: string };
@@ -347,7 +352,7 @@ export default function Home() {
     setStatusKind("idle");
 
     try {
-      const response = await fetch(`/api/entries?id=${encodeURIComponent(entry.id)}`, { method: "DELETE" });
+      const response = await fetch(`/api/entries?id=${encodeURIComponent(entry.id)}`, { method: "DELETE", credentials: "include" });
       const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
@@ -786,11 +791,3 @@ export default function Home() {
     </main>
   );
 }
-
-
-
-
-
-
-
-
