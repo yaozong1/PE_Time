@@ -22,8 +22,13 @@ function bucketBy(entries: WorkEntry[], field: keyof Pick<WorkEntry, "person" | 
   return Array.from(map.values()).sort((a, b) => b.hours - a.hours || a.name.localeCompare(b.name, "zh-CN"));
 }
 
-export function filterEntries(entries: WorkEntry[], month: string, person = "全部") {
-  return entries.filter((entry) => monthOf(entry.date) === month && (person === "全部" || entry.person === person));
+export function filterEntries(entries: WorkEntry[], month: string, person = "全部", project = "全部") {
+  return entries.filter(
+    (entry) =>
+      monthOf(entry.date) === month &&
+      (person === "全部" || entry.person === person) &&
+      (project === "全部" || entry.project === project)
+  );
 }
 
 export function summarize(entries: WorkEntry[]): MonthSummary {

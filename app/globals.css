@@ -520,3 +520,32 @@ h1 {
     padding-right: 12px;
   }
 }
+
+.summary-filters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 18px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.export-btn {
+  min-height: 42px;
+}
+
+@media (max-width: 820px) {
+  .summary-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-actions {
+    justify-content: stretch;
+  }
+
+  .export-btn {
+    width: 100%;
+  }
+}
